@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.coverage
+htmlcov/
+otms.db
+.pytest_cache/
+.venv/
