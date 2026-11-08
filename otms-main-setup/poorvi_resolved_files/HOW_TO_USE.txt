@@ -1,0 +1,17 @@
+Run these in your clone, AFTER Piyush says main has the first three PRs merged:
+
+  git checkout feature/OTMS-16-auth-rbac
+  git pull
+  git fetch origin
+  git merge origin/main          # conflicts in .gitignore and app/api/v1/__init__.py are expected
+  # copy the 6 files from this folder over yours (same paths), e.g.:
+  cp -r poorvi_resolved_files/.gitignore poorvi_resolved_files/requirements.txt .
+  cp poorvi_resolved_files/app/main.py app/main.py
+  cp poorvi_resolved_files/app/core/config.py app/core/config.py
+  cp poorvi_resolved_files/app/core/deps.py app/core/deps.py
+  cp poorvi_resolved_files/app/api/v1/__init__.py app/api/v1/__init__.py
+  grep -rn -E '^(<<<<<<<|>>>>>>>)' app tests requirements.txt   # must print nothing
+  python -m pytest -q            # expect all tests to pass (282 when everything is merged)
+  git add -A && git commit -m "OTMS-16: merge main and resolve conflicts"
+  git push
+Then open the PR into main.
