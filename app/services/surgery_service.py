@@ -14,6 +14,7 @@ from app.models.models import (
     SurgeryStatusEnum,
 )
 from app.services.conflict_detection import ConflictDetector
+from app.services.equipment_service import EquipmentService
 
 
 class SurgeryService:
@@ -153,6 +154,7 @@ class SurgeryService:
         surgery.status = SurgeryStatusEnum.cancelled
         # Release allocations
         self.db.query(Allocation).filter(Allocation.surgery_id == surgery_id).update({"released": True})
+        EquipmentService(self.db).sync_surgery_resources(surgery_id)
         self.db.commit()
         self.db.refresh(surgery)
         return surgery

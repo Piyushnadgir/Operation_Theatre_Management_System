@@ -100,6 +100,7 @@ class Theatre(Base):
     theatre_id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
     status = Column(Enum(TheatreStatusEnum), default=TheatreStatusEnum.available)
+    is_active = Column(Boolean, default=True)
 
     surgeries = relationship("Surgery", back_populates="theatre")
 
