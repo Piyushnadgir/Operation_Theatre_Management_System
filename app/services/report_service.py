@@ -64,7 +64,8 @@ class ReportService:
                             overlaps counted once)
         usage_percent     = booked_minutes / available_minutes x 100, rounded to 2 decimals
     Theatre bookings are surgeries that are scheduled, in progress or completed.
-    Equipment bookings are allocations whose surgery is not cancelled.
+    Equipment bookings are allocations whose surgery is not cancelled and that were not
+    replaced by a reschedule.
     """
 
     def __init__(self, db: Session):
@@ -117,6 +118,7 @@ class ReportService:
             .join(Surgery)
             .filter(
                 Surgery.status != SurgeryStatusEnum.cancelled,
+                Allocation.replaced == False,
                 Allocation.start_time < end,
                 Allocation.end_time > start,
             )

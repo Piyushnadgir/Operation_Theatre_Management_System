@@ -37,7 +37,7 @@ For each theatre and each equipment item:
 Rules:
 
 1. **Theatre bookings** are surgeries with status scheduled, in_progress or completed. Cancelled surgeries are excluded.
-2. **Equipment bookings** are allocations whose surgery is not cancelled. Released allocations still count, because completed surgeries also release their equipment.
+2. **Equipment bookings** are allocations whose surgery is not cancelled and that were not replaced by a reschedule (`replaced = False`, added in OTMS-24). Released allocations still count, because completed surgeries also release their equipment.
 3. **Clipping.** A booking that crosses `from` or `to` counts only the part inside the range. A booking that only touches the range counts 0.
 4. **No double counting.** Overlapping bookings of one item are merged before summing. This cannot happen through the API, but stays safe if bad data exists.
 5. **Integer arithmetic.** Minutes are whole numbers (seconds are dropped, after merging), and the percentage uses `Decimal`, so the figures are exact and repeatable.

@@ -224,3 +224,19 @@ def test_tc_rpt_02_bad_range_is_rejected(db_session, start, end):
 def test_tc_rpt_02_unknown_theatre_filter(db_session):
     with pytest.raises(ResourceNotFound):
         ReportService(db_session).utilization(FROM, TO, theatre_id=999)
+
+
+def test_tc_rpt_02_replaced_allocations_are_excluded(db_session):
+    """Rows replaced by a reschedule are history, not usage."""
+    (ot1,) = add(db_session, Theatre(name="OT-1"))
+    (vent,) = add(db_session, Equipment(name="Ventilator"))
+    s = surgery(db_session, ot1, at(13), at(15))
+    allocate(db_session, s, vent)  # current slot: 120 minutes
+    add(
+        db_session,
+        Allocation(
+            surgery_id=s.surgery_id, equipment_id=vent.equipment_id, theatre_id=ot1.theatre_id,
+            start_time=at(9), end_time=at(11), released=True, replaced=True,
+        ),
+    )
+    assert ReportService(db_session).utilization(FROM, TO)["equipment"][0]["booked_minutes"] == 120

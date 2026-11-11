@@ -152,7 +152,8 @@ THEATRE_SQL = f"""
 EQUIPMENT_SQL = f"""
     SELECT allocation.equipment_id, SUM({CLIPPED_MINUTES.format(t='allocation')})
     FROM allocation JOIN surgery ON surgery.surgery_id = allocation.surgery_id
-    WHERE surgery.status != 'cancelled' AND allocation.start_time < :to AND allocation.end_time > :from
+    WHERE surgery.status != 'cancelled' AND allocation.replaced = 0
+      AND allocation.start_time < :to AND allocation.end_time > :from
     GROUP BY allocation.equipment_id
 """
 
