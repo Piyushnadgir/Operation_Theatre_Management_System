@@ -227,7 +227,7 @@ Reproduced against the current code. None of these is fixed here, because each b
 |---|---|---|
 | Pulkit | Nothing sets a surgery to `in_progress` or `completed` | in_use and occupied never appear through the API, and "release on completion" is manual (POST /allocations/{id}/release). A start or complete action should set the status, release on completion, and call `EquipmentService(db).sync_surgery_resources(surgery_id)`, then commit |
 | Pulkit | Rescheduling without `equipment_ids` leaves allocations on the old slot | **The equipment shows as free at the new time and can be double-booked** |
-| Pulkit | Rescheduling with `equipment_ids` hard-deletes allocation rows | Conflicts with OT-NF-004 and SAD 3.6.1, and will lose data the utilization report needs |
+| Pulkit | ~~Rescheduling with `equipment_ids` hard-deletes allocation rows~~ | **Fixed in OTMS-24**: old rows are kept with `released` and `replaced` set (see docs/record_retention_notes.md) |
 | Pulkit | POST /surgeries accepts a theatre under maintenance or retired | The status check was only requested for equipment. POST /allocations does check the theatre |
 | Pulkit | POST /surgeries accepts end before start, and unknown theatre or equipment ids | Bad rows reach the tables I read. SQLite does not enforce the foreign keys |
 | Pulkit | `cancel_surgery` can cancel a completed surgery | History is overwritten |

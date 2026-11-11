@@ -169,6 +169,9 @@ class Allocation(Base):
     start_time = Column(DateTime(timezone=True), nullable=False)
     end_time = Column(DateTime(timezone=True), nullable=False)
     released = Column(Boolean, default=False)
+    # True when a reschedule replaced this row. The row is kept for history (OT-NF-004)
+    # but is not usage, so the utilization report ignores it.
+    replaced = Column(Boolean, default=False)
 
     surgery = relationship("Surgery", back_populates="allocations")
     equipment = relationship("Equipment", back_populates="allocations")
