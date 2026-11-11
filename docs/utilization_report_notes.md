@@ -67,3 +67,18 @@ table has no release time. Only cancellation removes usage.
 - `app/api/v1/reports.py`: the endpoint
 - `app/api/v1/__init__.py`: registers the router (shared file, one import and one line)
 - `tests/test_report_service.py` and `tests/test_report_api.py`
+
+## Accuracy (OTMS-25, OT-NF-005, TC-Rpt-03)
+
+`tests/test_report_accuracy.py` loads a fixed dataset for 2026-05-04, 08:00 to 20:00 (720 minutes):
+3 active theatres and 1 retired one, 3 active and 2 retired equipment items, and 7 surgeries. The
+surgeries include one cancelled, one crossing the start, one crossing the end, one only touching the
+start and one on the next day.
+
+| Test | What it proves |
+|---|---|
+| `test_tc_rpt_03_report_matches_hand_computed_totals` | Every row and both totals equal hand-computed literals. The arithmetic is in the comments |
+| `test_tc_rpt_03_theatre_filter_matches_hand_computed_totals` | The same for `theatreId` = OT-B |
+| `test_tc_rpt_03_report_matches_independent_sql_sum` | Booked minutes equal a separate SQL query that clips and sums the raw `surgery` and `allocation` rows without using the report code |
+
+Result: all three pass. No defect was found in the report code.
