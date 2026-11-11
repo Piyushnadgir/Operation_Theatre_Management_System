@@ -130,7 +130,10 @@ class SurgeryService:
 
         # Update allocations
         if equipment_ids is not None:
-            self.db.query(Allocation).filter(Allocation.surgery_id == surgery_id).delete()
+            # Keep the old rows for history (OT-NF-004) instead of deleting them
+            self.db.query(Allocation).filter(
+                Allocation.surgery_id == surgery_id, Allocation.replaced == False
+            ).update({"released": True, "replaced": True})
             for eq_id in equipment_ids:
                 alloc = Allocation(
                     surgery_id=surgery_id,
