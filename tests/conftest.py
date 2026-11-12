@@ -11,6 +11,7 @@ from app.core.database import Base
 @pytest.fixture(scope="function")
 def db_session():
     db_fd, db_path = tempfile.mkstemp()
+    os.close(db_fd)
     engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     Base.metadata.create_all(bind=engine)
@@ -19,5 +20,8 @@ def db_session():
         yield db
     finally:
         db.close()
-    os.close(db_fd)
-    os.unlink(db_path)
+        engine.dispose()
+    try:
+        os.unlink(db_path)
+    except PermissionError:
+        pass
