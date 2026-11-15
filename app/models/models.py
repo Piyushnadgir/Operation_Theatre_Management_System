@@ -100,6 +100,7 @@ class Theatre(Base):
     theatre_id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
     status = Column(Enum(TheatreStatusEnum), default=TheatreStatusEnum.available)
+    is_active = Column(Boolean, default=True)
 
     surgeries = relationship("Surgery", back_populates="theatre")
 
@@ -168,6 +169,9 @@ class Allocation(Base):
     start_time = Column(DateTime(timezone=True), nullable=False)
     end_time = Column(DateTime(timezone=True), nullable=False)
     released = Column(Boolean, default=False)
+    # True when a reschedule replaced this row. The row is kept for history (OT-NF-004)
+    # but is not usage, so the utilization report ignores it.
+    replaced = Column(Boolean, default=False)
 
     surgery = relationship("Surgery", back_populates="allocations")
     equipment = relationship("Equipment", back_populates="allocations")

@@ -1,7 +1,14 @@
 __pycache__/
 *.pyc
-.coverage
-htmlcov/
+*.db
 otms.db
 .pytest_cache/
+.coverage
+htmlcov/
 .venv/
+venv/
+*.pem
+.DS_Store
+reports/
+*.sqlite3
+ot-management-system/

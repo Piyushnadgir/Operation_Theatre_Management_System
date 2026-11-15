@@ -14,6 +14,7 @@ from app.models.models import (
     SurgeryStatusEnum,
 )
 from app.services.conflict_detection import ConflictDetector
+from app.services.equipment_service import EquipmentService
 
 
 class SurgeryService:
@@ -129,7 +130,10 @@ class SurgeryService:
 
         # Update allocations
         if equipment_ids is not None:
-            self.db.query(Allocation).filter(Allocation.surgery_id == surgery_id).delete()
+            # Keep the old rows for history (OT-NF-004) instead of deleting them
+            self.db.query(Allocation).filter(
+                Allocation.surgery_id == surgery_id, Allocation.replaced == False
+            ).update({"released": True, "replaced": True})
             for eq_id in equipment_ids:
                 alloc = Allocation(
                     surgery_id=surgery_id,
@@ -153,6 +157,7 @@ class SurgeryService:
         surgery.status = SurgeryStatusEnum.cancelled
         # Release allocations
         self.db.query(Allocation).filter(Allocation.surgery_id == surgery_id).update({"released": True})
+        EquipmentService(self.db).sync_surgery_resources(surgery_id)
         self.db.commit()
         self.db.refresh(surgery)
         return surgery

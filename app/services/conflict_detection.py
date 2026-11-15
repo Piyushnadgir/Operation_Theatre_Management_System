@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import List, Tuple
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.models.models import Allocation, EquipmentStatusEnum, Shift, Staff, Surgery, SurgeryStaff, TheatreStatusEnum
+from app.models.models import Allocation, Equipment, EquipmentStatusEnum, Shift, Staff, Surgery, SurgeryStaff, TheatreStatusEnum
 
 
 class ConflictDetector:
@@ -74,6 +75,14 @@ class ConflictDetector:
                 conflicts.append(equipment_id)
         return conflicts
 
+    def check_equipment_status(self, equipment_ids: List[int]) -> List[int]:
+        """Return the ids of equipment that cannot be booked: retired or under maintenance."""
+        unusable = self.db.query(Equipment).filter(
+            Equipment.equipment_id.in_(equipment_ids),
+            or_(Equipment.is_active == False, Equipment.status == EquipmentStatusEnum.maintenance),
+        )
+        return [equipment.equipment_id for equipment in unusable]
+
     def detect_all_conflicts(
         self,
         theatre_id: int,
@@ -106,6 +115,10 @@ class ConflictDetector:
             for eq_id in self.check_equipment_conflict(equipment_ids, start_time, end_time, exclude_surgery_id):
                 conflicts.append(
                     {"resource_type": "equipment", "resource_id": eq_id, "message": f"Equipment {eq_id} is already in use"}
+                )
+            for eq_id in self.check_equipment_status(equipment_ids):
+                conflicts.append(
+                    {"resource_type": "equipment", "resource_id": eq_id, "message": f"Equipment {eq_id} is retired or under maintenance"}
                 )
 
         return len(conflicts) > 0, conflicts

@@ -53,10 +53,10 @@ class ShiftService:
             if current[0] < previous[1]:
                 raise ShiftValidationError("Shifts of one person must not overlap")
 
-        # Delete through the ORM so the session forgets the old rows. A bulk delete would leave
-        # stale objects behind, and SQLite can reuse their ids for the new shifts.
+        # Expunge cached Shift objects before bulk delete so SQLite id reuse cannot leave stale state.
         for old_shift in self.db.query(Shift).filter(Shift.staff_id == staff_id).all():
-            self.db.delete(old_shift)
+            self.db.expunge(old_shift)
+        self.db.query(Shift).filter(Shift.staff_id == staff_id).delete(synchronize_session=False)
         self.db.flush()
         new_shifts = [Shift(staff_id=staff_id, start_time=s, end_time=e) for s, e in ranges]
         self.db.add_all(new_shifts)
