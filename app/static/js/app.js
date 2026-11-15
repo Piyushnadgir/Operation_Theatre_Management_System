@@ -3,13 +3,16 @@
 
 import { api, ApiError, session, setSessionEndedHandler } from "./api.js";
 import { el, hideMessage, notify, showMessage, whileBusy } from "./dom.js";
+import { refreshEmergencyBanner } from "./banner.js";
+import { renderEmergencies } from "./emergency.js";
 import { can } from "./roles.js";
+import { renderSurgeries } from "./surgeries.js";
 
 // The screens, in the order of the SAD Figure 4.3 navigation bar.
 // "permission" names an entry in roles.js. Screens are added in later stages.
 const SCREENS = [
-  { id: "surgeries", label: "Surgeries", permission: "viewSurgeries", render: notBuiltYet },
-  { id: "emergencies", label: "Emergencies", permission: "viewEmergencyQueue", render: notBuiltYet },
+  { id: "surgeries", label: "Surgeries", permission: "viewSurgeries", render: renderSurgeries },
+  { id: "emergencies", label: "Emergencies", permission: "viewEmergencyQueue", render: renderEmergencies },
   { id: "staff", label: "Staff", permission: "manageStaff", render: notBuiltYet },
   { id: "equipment", label: "Equipment", permission: "viewEquipment", render: notBuiltYet },
   { id: "reports", label: "Reports", permission: "viewReports", render: notBuiltYet },
@@ -115,20 +118,6 @@ async function showRoute() {
   const title = view.querySelector("h1");
   if (title) title.focus();
   refreshEmergencyBanner();
-}
-
-// SAD 4.5: a prominent emergency banner showing how many emergencies are active.
-export async function refreshEmergencyBanner() {
-  const count = document.getElementById("emergency-count");
-  try {
-    const queue = await api("GET", "/emergencies/queue");
-    count.textContent = queue.length === 0
-      ? "✔ No active emergencies"
-      : `⚠ ${queue.length} active emergenc${queue.length === 1 ? "y" : "ies"}`;
-    count.classList.toggle("active", queue.length > 0);
-  } catch {
-    count.textContent = "⚠ Emergency queue unavailable";
-  }
 }
 
 // ---------- high-contrast theme (SAD 4.5) ----------

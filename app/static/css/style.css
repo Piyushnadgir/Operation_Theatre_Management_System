@@ -299,6 +299,44 @@ th { background: var(--surface); }
 }
 
 .inline-status { font-size: 0.95rem; margin-left: 0.4rem; }
+
+/* ---------- surgeries day view: one column per theatre ---------- */
+
+.day-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+.day-column { border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; }
+.day-column h3 { margin: 0 0 0.5rem; }
+.surgery-card {
+  border: 1px solid var(--border);
+  border-left-width: 6px;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.6rem;
+  background: var(--bg);
+}
+.surgery-card p { margin: 0.15rem 0; }
+.surgery-time { font-weight: 700; }
+/* The coloured edge repeats the priority badge; the badge text carries the meaning. */
+.priority-border-critical { border-left-color: var(--danger); }
+.priority-border-urgent { border-left-color: #b8860b; }
+.priority-border-routine { border-left-color: var(--brand); }
+
+dialog {
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  width: min(32rem, 95vw);
+}
+dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+
+.notifications { list-style: none; padding: 0; margin: 0; }
+.notifications li { padding: 0.35rem 0; border-bottom: 1px solid var(--border); }
+.notifications li.unread { font-weight: 600; }
+.emergency-form { border: 3px solid var(--danger); }
 .visually-hidden {
   position: absolute;
   width: 1px;

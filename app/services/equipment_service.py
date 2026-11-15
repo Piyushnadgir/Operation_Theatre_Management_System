@@ -254,6 +254,19 @@ class EquipmentService:
             self.db.commit()
         return allocation
 
+    def list_allocations(
+        self, surgery_id: Optional[int] = None, equipment_id: Optional[int] = None, include_released: bool = False
+    ) -> List[Allocation]:
+        """Current allocations, oldest first. Rows replaced by a reschedule are history and never listed."""
+        query = self.db.query(Allocation).filter(Allocation.replaced == False)
+        if surgery_id is not None:
+            query = query.filter(Allocation.surgery_id == surgery_id)
+        if equipment_id is not None:
+            query = query.filter(Allocation.equipment_id == equipment_id)
+        if not include_released:
+            query = query.filter(Allocation.released == False)
+        return query.order_by(Allocation.start_time, Allocation.allocation_id).all()
+
     def sync_surgery_resources(self, surgery_id: int) -> None:
         """Make the stored status of a surgery's theatre and equipment match SAD 3.4.
 

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import require_roles
-from app.models.models import RoleEnum, StaffTypeEnum
+from app.models.models import RoleEnum, StaffTypeEnum, User
 from app.schemas.staff import (
     AssignmentCheckRequest,
     AssignmentCheckResponse,
@@ -36,8 +36,14 @@ def create_staff(
     db: Session = Depends(get_db),
     current_user=Depends(_admin),
 ):
+    if data.user_id is not None and db.get(User, data.user_id) is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": "Bad Request", "message": f"User {data.user_id} not found"},
+        )
     staff = StaffService(db).create_staff(
-        name=data.name, staff_type=data.staff_type, specialization=data.specialization
+        name=data.name, staff_type=data.staff_type, specialization=data.specialization,
+        user_id=data.user_id,
     )
     log_action(db, "staff.create", user_id=current_user.get("sub"),
                entity_type="staff", entity_id=staff.staff_id)
