@@ -129,3 +129,8 @@ def test_tc_rpt_02_doctors_and_nurses_get_403(client, role):
 
 def test_tc_rpt_02_invalid_token_is_rejected(client):
     assert client.get(URL, params=RANGE, headers={"Authorization": "Bearer nope"}).status_code == 401
+
+
+def test_tc_rpt_01_key_figures_in_api_response(client, seeded):
+    body = client.get(URL, params=RANGE, headers=headers("scheduler")).json()
+    assert body["keyFigures"] == {"surgeries": 1, "emergencyCases": 0}

@@ -337,6 +337,10 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
 .notifications li { padding: 0.35rem 0; border-bottom: 1px solid var(--border); }
 .notifications li.unread { font-weight: 600; }
 .emergency-form { border: 3px solid var(--danger); }
+
+.tile-actions { display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; margin-top: 0.5rem; }
+.tile-actions select { min-height: 2rem; padding: 0.15rem 0.4rem; }
+.shift-row { align-items: flex-end; }
 .visually-hidden {
   position: absolute;
   width: 1px;

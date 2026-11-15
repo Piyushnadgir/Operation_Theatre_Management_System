@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Tuple
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.models.models import Allocation, Equipment, Surgery, SurgeryStatusEnum, Theatre
+from app.models.models import Allocation, EmergencyCase, Equipment, Surgery, SurgeryStatusEnum, Theatre
 from app.services.equipment_service import InvalidRequest, ResourceNotFound, clean_time_range
 
 # Surgeries that really use their theatre. Cancelled ones do not count.
@@ -97,7 +97,22 @@ class ReportService:
             "theatres": theatres,
             "equipment": equipment,
             "totals": {"theatres": self._total(theatres), "equipment": self._total(equipment)},
+            "key_figures": self._key_figures(start, end, theatre_id),
         }
+
+    def _key_figures(self, start, end, theatre_id) -> dict:
+        """Counts for the Utilization Dashboard (SAD Figure 4.4): surgeries and emergency
+        cases in the range. Same rule as the theatre usage: surgeries that are not
+        cancelled and overlap the range."""
+        query = self.db.query(Surgery).filter(
+            Surgery.status.in_(COUNTED_SURGERY_STATUSES),
+            Surgery.start_time < end,
+            Surgery.end_time > start,
+        )
+        if theatre_id is not None:
+            query = query.filter(Surgery.theatre_id == theatre_id)
+        emergencies = query.join(EmergencyCase, EmergencyCase.surgery_id == Surgery.surgery_id)
+        return {"surgeries": query.count(), "emergency_cases": emergencies.count()}
 
     def _theatre_bookings(self, start, end, theatre_id) -> Dict[int, List[Interval]]:
         query = self.db.query(Surgery).filter(

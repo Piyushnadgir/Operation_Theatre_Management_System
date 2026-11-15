@@ -133,3 +133,31 @@ export function statusBadge(status) {
 export function assetTag(equipmentId) {
   return "EQ-" + String(equipmentId).padStart(4, "0");
 }
+
+// A form in a modal dialog. onSubmit runs when Save is pressed; if it throws, the
+// error is shown in the dialog and it stays open. Esc or Close closes it.
+export function openDialog(title, body, onSubmit, saveLabel = "Save") {
+  const message = el("div", { class: "message", role: "alert", tabindex: "-1", hidden: true });
+  const save = el("button", { type: "submit", class: "button" }, saveLabel);
+  const close = el("button", { type: "button", class: "button button-secondary" }, "Close");
+  const form = el("form", { method: "dialog", novalidate: true },
+    el("h2", { text: title }), body, message, el("p", { class: "toolbar" }, save, close));
+  const dialog = el("dialog", { "aria-label": title }, form);
+  close.addEventListener("click", () => dialog.close());
+  dialog.addEventListener("close", () => dialog.remove());
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    hideMessage(message);
+    try {
+      await whileBusy(save, "Saving…", onSubmit);
+      dialog.close();
+    } catch (error) {
+      showMessage(message, "error", error.message);
+      message.focus();
+    }
+  });
+  document.body.append(dialog);
+  dialog.showModal();
+  const first = form.querySelector("input, select");
+  if (first) first.focus();
+}

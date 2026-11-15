@@ -4,23 +4,22 @@
 import { api, ApiError, session, setSessionEndedHandler } from "./api.js";
 import { el, hideMessage, notify, showMessage, whileBusy } from "./dom.js";
 import { refreshEmergencyBanner } from "./banner.js";
+import { renderBoard } from "./board.js";
+import { renderDashboard } from "./dashboard.js";
 import { renderEmergencies } from "./emergency.js";
 import { can } from "./roles.js";
+import { renderStaff } from "./staff.js";
 import { renderSurgeries } from "./surgeries.js";
 
 // The screens, in the order of the SAD Figure 4.3 navigation bar.
-// "permission" names an entry in roles.js. Screens are added in later stages.
+// "permission" names an entry in roles.js.
 const SCREENS = [
   { id: "surgeries", label: "Surgeries", permission: "viewSurgeries", render: renderSurgeries },
   { id: "emergencies", label: "Emergencies", permission: "viewEmergencyQueue", render: renderEmergencies },
-  { id: "staff", label: "Staff", permission: "manageStaff", render: notBuiltYet },
-  { id: "equipment", label: "Equipment", permission: "viewEquipment", render: notBuiltYet },
-  { id: "reports", label: "Reports", permission: "viewReports", render: notBuiltYet },
+  { id: "staff", label: "Staff", permission: "manageStaff", render: renderStaff },
+  { id: "equipment", label: "Equipment", permission: "viewEquipment", render: renderBoard },
+  { id: "reports", label: "Reports", permission: "viewReports", render: renderDashboard },
 ];
-
-function notBuiltYet(container) {
-  container.append(el("h1", { tabindex: "-1", text: "Coming soon" }), el("p", { text: "This screen is not built yet." }));
-}
 
 const loginView = document.getElementById("login-view");
 const view = document.getElementById("view");
