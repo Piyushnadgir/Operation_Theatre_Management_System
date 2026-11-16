@@ -161,3 +161,37 @@ export function openDialog(title, body, onSubmit, saveLabel = "Save") {
   const first = form.querySelector("input, select");
   if (first) first.focus();
 }
+
+// ---------- shared layout pieces ----------
+
+// One checkbox option: the box, the name, and an optional smaller second line
+// (for example "✖ Not on shift for the whole surgery time"). Wrapping the input in its
+// <label> links them, so clicking the text ticks the box.
+export function checkOption({ name, value, label, note = null, checked = false, disabled = false }) {
+  const box = el("input", { type: "checkbox", name, value: String(value), checked, disabled });
+  return el("label", { class: disabled ? "check-option unavailable" : "check-option" },
+    box,
+    el("span", { class: "check-text" },
+      el("span", { text: label }),
+      note ? el("span", { class: "check-reason", text: note }) : null));
+}
+
+// The API's reasons start with the person's name ("Dr. Rao is not on shift ...").
+// Next to the name that repeats it, so drop the name (and "is") and start with a capital.
+export function reasonWithoutName(reason, name) {
+  if (!reason.startsWith(name)) return reason;
+  const rest = reason.slice(name.length).trim().replace(/^is\s+/, "");
+  return rest.charAt(0).toUpperCase() + rest.slice(1);
+}
+
+// Small outlined action button (Edit, Status, Allocate, ...).
+export function smallButton(label, onclick, extra = {}) {
+  return el("button", { type: "button", class: "btn-small", onclick, ...extra }, label);
+}
+
+// Destructive action (Retire, Deactivate, Cancel): red, thicker border and a ⊘ icon,
+// so it does not rely on colour. The icon is hidden from screen readers.
+export function dangerButton(label, onclick) {
+  return el("button", { type: "button", class: "btn-small btn-danger", onclick },
+    el("span", { "aria-hidden": "true", text: "⊘" }), label);
+}

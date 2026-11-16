@@ -2,7 +2,9 @@
 // and nurses, edit their shifts, and check who is available for a time range.
 
 import { api } from "./api.js";
-import { el, formatDateTime, hideMessage, notify, openDialog, showMessage, toInputDateTime, whileBusy } from "./dom.js";
+import {
+  dangerButton, el, formatDateTime, hideMessage, notify, openDialog, showMessage, smallButton, toInputDateTime, whileBusy,
+} from "./dom.js";
 
 export async function renderStaff(container) {
   const typeFilter = el("select", { id: "st-type" },
@@ -23,7 +25,8 @@ export async function renderStaff(container) {
       el("h2", { id: "staff-list-title", text: "Doctors and nurses" }),
       el("div", { class: "toolbar" },
         el("div", { class: "field" }, el("label", { for: "st-type", text: "Show" }), typeFilter),
-        el("div", { class: "field" }, el("label", { for: "st-inactive" }, showInactive, " Include deactivated"))),
+        // The checkbox sits inside its label, so the box and text form one row.
+        el("label", { class: "check-option" }, showInactive, el("span", { text: "Include deactivated" }))),
       el("div", { class: "toolbar" },
         el("div", { class: "field" }, el("label", { for: "st-from", text: "Available from" }), from),
         el("div", { class: "field" }, el("label", { for: "st-to", text: "until" }), to),
@@ -75,11 +78,10 @@ export async function renderStaff(container) {
           el("td", { text: person.is_active ? "✔ Active" : "✖ Deactivated" }),
           el("td", { text: person.user_id ? "✔ Linked" : "—" }),
           el("td", { text: available }),
-          el("td", {}, person.is_active ? [
-            el("button", { type: "button", class: "link-button", onclick: () => editStaff(person, load) }, "Edit"),
-            el("button", { type: "button", class: "link-button", onclick: () => editShifts(person) }, "Shifts"),
-            el("button", { type: "button", class: "link-button", onclick: () => deactivate(person, load) }, "Deactivate"),
-          ] : "—"));
+          el("td", {}, person.is_active ? el("div", { class: "actions" },
+            smallButton("Edit", () => editStaff(person, load)),
+            smallButton("Shifts", () => editShifts(person)),
+            dangerButton("Deactivate", () => deactivate(person, load))) : "—"));
       }))));
   }
 

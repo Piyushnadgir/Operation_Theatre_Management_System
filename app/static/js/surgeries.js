@@ -4,8 +4,8 @@
 
 import { api } from "./api.js";
 import {
-  addMinutes, el, formatDateTime, formatTime, hideMessage, notify, priorityBadge,
-  showMessage, statusBadge, toInputDate, toInputDateTime, whileBusy,
+  addMinutes, dangerButton, el, formatDateTime, formatTime, hideMessage, notify, priorityBadge,
+  showMessage, smallButton, statusBadge, toInputDate, toInputDateTime, whileBusy,
 } from "./dom.js";
 import { describeConflicts, loadLookups, theatreName } from "./lookups.js";
 import { can } from "./roles.js";
@@ -81,9 +81,9 @@ export async function renderSurgeries(container) {
       el("p", { class: "surgery-patient", text: surgery.patient_name }),
       el("p", {}, priorityBadge(surgery.priority), " ", statusBadge(surgery.status)));
     if (can("manageSurgeries") && surgery.status === "scheduled") {
-      card.append(el("p", {},
-        el("button", { type: "button", class: "link-button", onclick: () => openReschedule(surgery) }, "Reschedule"),
-        el("button", { type: "button", class: "link-button", onclick: () => cancel(surgery) }, "Cancel")));
+      card.append(el("div", { class: "actions" },
+        smallButton("Reschedule", () => openReschedule(surgery)),
+        dangerButton("Cancel", () => cancel(surgery))));
     }
     return card;
   }
@@ -194,16 +194,13 @@ async function myNotifications() {
     }
     list.replaceChildren(...notifications.map((note) => {
       const item = el("li", { class: note.is_read ? "read" : "unread" },
-        el("span", { class: "badge", text: note.is_read ? "Read" : "● New" }), " ",
+        el("span", { class: "badge", text: note.is_read ? "Read" : "● New" }),
         el("span", { text: `${formatDateTime(note.created_at)}: ${note.message}` }));
       if (!note.is_read) {
-        item.append(" ", el("button", {
-          type: "button", class: "link-button",
-          onclick: async () => {
-            await api("PATCH", `/emergencies/notifications/${note.notification_id}/read`);
-            draw();
-          },
-        }, "Mark as read"));
+        item.append(smallButton("Mark as read", async () => {
+          await api("PATCH", `/emergencies/notifications/${note.notification_id}/read`);
+          draw();
+        }));
       }
       return item;
     }));

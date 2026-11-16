@@ -5,7 +5,7 @@
 
 import { api } from "./api.js";
 import {
-  assetTag, el, formatDateTime, formatTime, notify, openDialog, statusBadge, toInputDateTime,
+  assetTag, dangerButton, el, formatDateTime, formatTime, notify, openDialog, smallButton, statusBadge, toInputDateTime,
 } from "./dom.js";
 import { describeConflicts, loadLookups, theatreName } from "./lookups.js";
 import { can } from "./roles.js";
@@ -36,13 +36,12 @@ export async function renderBoard(container) {
         el("div", { class: "field" }, el("label", { for: "eq-search", class: "visually-hidden", text: "Search equipment" }), search),
         can("manageEquipment")
           ? el("button", { type: "button", class: "button", onclick: () => equipmentDialog(null, load) }, "+ Add equipment")
-          : null)),
-    el("section", { "aria-labelledby": "theatres-title" },
-      el("div", { class: "title-row" },
-        el("h2", { id: "theatres-title", text: "Theatres" }),
+          : null,
         can("manageEquipment")
           ? el("button", { type: "button", class: "button button-secondary", onclick: () => theatreDialog(load) }, "+ Add theatre")
-          : null),
+          : null)),
+    el("section", { "aria-labelledby": "theatres-title" },
+      el("h2", { id: "theatres-title", text: "Theatres" }),
       tiles),
     el("section", { "aria-labelledby": "inventory-title" },
       el("h2", { id: "inventory-title", text: "Equipment inventory" }),
@@ -87,7 +86,7 @@ export async function renderBoard(container) {
       ["available", "cleaning", "maintenance"].map((status) =>
         el("option", { value: status, selected: theatre.status === status }, status[0].toUpperCase() + status.slice(1))));
     const apply = el("button", {
-      type: "button", class: "link-button",
+      type: "button", class: "btn-small",
       onclick: async () => {
         try {
           await api("PATCH", `/theatres/${theatre.theatreId}/status`, { body: { status: select.value } });
@@ -98,19 +97,16 @@ export async function renderBoard(container) {
         }
       },
     }, "Set status");
-    const retire = el("button", {
-      type: "button", class: "link-button",
-      onclick: async () => {
-        if (!window.confirm(`Retire theatre ${theatre.name}? It will no longer be bookable. Its history is kept.`)) return;
-        try {
-          await api("DELETE", `/theatres/${theatre.theatreId}`);
-          notify("success", `${theatre.name} retired.`);
-          load();
-        } catch (error) {
-          notify("error", conflictText(`${theatre.name} not retired`, error));
-        }
-      },
-    }, "Retire");
+    const retire = dangerButton("Retire", async () => {
+      if (!window.confirm(`Retire theatre ${theatre.name}? It will no longer be bookable. Its history is kept.`)) return;
+      try {
+        await api("DELETE", `/theatres/${theatre.theatreId}`);
+        notify("success", `${theatre.name} retired.`);
+        load();
+      } catch (error) {
+        notify("error", conflictText(`${theatre.name} not retired`, error));
+      }
+    });
     return el("div", { class: "tile-actions" },
       el("label", { for: id, class: "visually-hidden", text: `Status of ${theatre.name}` }), select, apply, retire);
   }
@@ -167,26 +163,24 @@ export async function renderBoard(container) {
   function itemActions(item) {
     const actions = [];
     if (can("manageEquipment")) {
-      actions.push(el("button", { type: "button", class: "link-button", onclick: () => equipmentDialog(item, load) }, "Edit"));
+      actions.push(smallButton("Edit", () => equipmentDialog(item, load)));
       if (item.status !== "in_use") {
         const next = item.status === "maintenance" ? "available" : "maintenance";
-        actions.push(el("button", {
-          type: "button", class: "link-button", onclick: () => setStatus(item, next),
-          "aria-label": `Status: set ${item.name} to ${next}`, // starts with the visible word
-        }, "Status"));
+        actions.push(smallButton("Status", () => setStatus(item, next),
+          { "aria-label": `Status: set ${item.name} to ${next}` })); // starts with the visible word
       }
     }
     if (can("allocate")) {
-      actions.push(el("button", { type: "button", class: "link-button", onclick: () => allocateDialog(item, load) }, "Allocate"));
+      actions.push(smallButton("Allocate", () => allocateDialog(item, load)));
       const current = allocations.filter((allocation) => allocation.equipmentId === item.equipmentId);
       if (current.length > 0) {
-        actions.push(el("button", { type: "button", class: "link-button", onclick: () => releaseDialog(item, current, load) }, `Release (${current.length})`));
+        actions.push(smallButton(`Release (${current.length})`, () => releaseDialog(item, current, load)));
       }
     }
     if (can("manageEquipment")) {
-      actions.push(el("button", { type: "button", class: "link-button", onclick: () => retireEquipment(item) }, "Retire"));
+      actions.push(dangerButton("Retire", () => retireEquipment(item)));
     }
-    return actions.length ? actions : "—";
+    return actions.length ? el("div", { class: "actions" }, actions) : "—";
   }
 
   // Available <-> maintenance (SAD 3.4). In use must be released first, so no button then.

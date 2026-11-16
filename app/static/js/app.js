@@ -74,7 +74,12 @@ function logout() {
 function startApp() {
   loginView.hidden = true;
   const userInfo = document.getElementById("user-info");
-  userInfo.textContent = `${session.username} (${session.role})`;
+  const role = session.role.charAt(0).toUpperCase() + session.role.slice(1);
+  // "drrao [Doctor]"; when the username is the role ("admin"), only "[Admin]" is shown.
+  userInfo.replaceChildren(
+    session.username === session.role ? "" : el("span", { text: session.username }),
+    el("span", { class: "role-badge", text: role }));
+  userInfo.setAttribute("aria-label", `Signed in as ${session.username}, role ${role}`);
   userInfo.hidden = false;
   document.getElementById("logout-button").hidden = false;
   buildNav();
@@ -91,6 +96,9 @@ function buildNav() {
   document.getElementById("emergency-button").hidden = !can("logEmergency");
 }
 
+// Counts navigations, so a slow screen that finishes late is not shown over a newer one.
+let renderCount = 0;
+
 // Draw the screen named in the URL hash (#surgeries, #equipment, ...).
 async function showRoute() {
   if (!session.token) {
@@ -102,17 +110,28 @@ async function showRoute() {
   const screen = allowed.find((item) => item.id === wanted) || allowed[0];
 
   for (const link of nav.querySelectorAll("a")) {
-    if (link.dataset.screen === screen.id) link.setAttribute("aria-current", "page");
-    else link.removeAttribute("aria-current");
+    if (link.dataset.screen === screen.id) {
+      link.setAttribute("aria-current", "page");
+      // On a phone the menu scrolls sideways; keep the current screen's link in view.
+      link.scrollIntoView({ block: "nearest", inline: "nearest" });
+    } else {
+      link.removeAttribute("aria-current");
+    }
   }
   hideMessage(document.getElementById("global-message"));
-  view.replaceChildren();
+  const myRender = ++renderCount;
+  view.replaceChildren(el("p", { class: "message message-loading", text: "Loading…" }));
+  // The screen is drawn into a new element and only shown if no newer navigation has
+  // started meanwhile; otherwise two screens could end up mixed in one page.
+  const screenBox = el("div");
   try {
-    await screen.render(view);
+    await screen.render(screenBox);
   } catch (error) {
     // Includes the server's 403 message if a role reaches something it may not use.
-    if (session.token) notify("error", error.message || "Something went wrong.");
+    if (session.token && myRender === renderCount) notify("error", error.message || "Something went wrong.");
   }
+  if (myRender !== renderCount) return;
+  view.replaceChildren(screenBox);
   // Move focus to the screen title so keyboard users start at the top.
   const title = view.querySelector("h1");
   if (title) title.focus();

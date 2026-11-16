@@ -7,7 +7,9 @@
 // so the scheduler only fixes what is wrong and saves again.
 
 import { api } from "./api.js";
-import { addMinutes, assetTag, el, hideMessage, showMessage, toInputDateTime, whileBusy } from "./dom.js";
+import {
+  addMinutes, assetTag, checkOption, el, hideMessage, reasonWithoutName, showMessage, toInputDateTime, whileBusy,
+} from "./dom.js";
 import { describeConflicts } from "./lookups.js";
 
 const DURATIONS = [30, 60, 90, 120, 150, 180, 240, 300];
@@ -36,18 +38,25 @@ function field(labelText, input, ...extra) {
   return el("div", { class: "field" }, el("label", { for: input.id, text: labelText }), input, ...extra);
 }
 
-// A list of checkboxes. items: [{ id, label, problem }]; a problem disables the box and is shown as text.
+// The same, spanning two grid columns so the form grid has no empty cell.
+function wideField(labelText, input, ...extra) {
+  const wide = field(labelText, input, ...extra);
+  wide.classList.add("field-wide");
+  return wide;
+}
+
+// A list of checkboxes. items: [{ id, label, problem }]; a problem disables the box and is
+// shown on a second line, without repeating the name.
 function fillCheckList(container, name, items, checkedIds) {
   container.replaceChildren(
-    ...items.map((item) => {
-      const box = el("input", {
-        type: "checkbox", name, value: String(item.id),
-        disabled: Boolean(item.problem),
-        checked: !item.problem && checkedIds.has(item.id),
-      });
-      const status = item.problem ? `✖ ${item.problem}` : "✔ available";
-      return el("label", {}, box, ` ${item.label} `, el("span", { class: "inline-status", text: `(${status})` }));
-    }),
+    ...items.map((item) => checkOption({
+      name,
+      value: item.id,
+      label: item.label,
+      note: item.problem ? `✖ ${reasonWithoutName(item.problem, item.label)}` : "✔ Available",
+      checked: !item.problem && checkedIds.has(item.id),
+      disabled: Boolean(item.problem),
+    })),
   );
   if (items.length === 0) container.append(el("p", { class: "hint", text: "None available." }));
 }
@@ -154,7 +163,7 @@ export function scheduleForm(lookups, onSaved) {
       field("Start", start),
       field("Duration", duration),
       field("Priority", priority),
-      field("Theatre", theatre, availability),
+      wideField("Theatre", theatre, availability),
     ),
     el("div", { class: "form-grid" },
       el("fieldset", { class: "field" }, el("legend", { text: "Doctors" }), doctors),

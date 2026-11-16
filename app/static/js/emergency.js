@@ -5,7 +5,7 @@
 import { api } from "./api.js";
 import { refreshEmergencyBanner } from "./banner.js";
 import {
-  addMinutes, el, formatDateTime, formatTime, hideMessage, priorityBadge, showMessage,
+  addMinutes, checkOption, el, formatDateTime, formatTime, hideMessage, priorityBadge, showMessage,
   statusBadge, toInputDateTime, whileBusy,
 } from "./dom.js";
 import { loadLookups, theatreName } from "./lookups.js";
@@ -45,7 +45,7 @@ function intakeForm(lookups, onLogged) {
 
   // Doctors and nurses can be named here if this role may list staff (admin, scheduler).
   const staffBoxes = (type) => lookups.staff.filter((person) => person.is_active && person.staff_type === type)
-    .map((person) => el("label", {}, el("input", { type: "checkbox", name: type, value: String(person.staff_id) }), ` ${person.name}`));
+    .map((person) => checkOption({ name: type, value: person.staff_id, label: person.name }));
   const staffFields = lookups.staff.length === 0 ? [] : [
     el("fieldset", { class: "field" }, el("legend", { text: "Doctors" }), el("div", { class: "check-list" }, staffBoxes("doctor"))),
     el("fieldset", { class: "field" }, el("legend", { text: "Nurses" }), el("div", { class: "check-list" }, staffBoxes("nurse"))),
@@ -57,7 +57,7 @@ function intakeForm(lookups, onLogged) {
       el("div", { class: "field" }, el("label", { for: "e-patient", text: "Patient name" }), patient),
       el("div", { class: "field" }, el("label", { for: "e-priority", text: "Priority" }), priority),
       el("div", { class: "field" }, el("label", { for: "e-theatre", text: "Theatre" }), theatre),
-      el("div", { class: "field" }, el("label", { for: "e-start", text: "Start" }), start),
+      el("div", { class: "field field-wide" }, el("label", { for: "e-start", text: "Start" }), start),
       el("div", { class: "field" }, el("label", { for: "e-duration", text: "Duration" }), duration),
     ),
     el("div", { class: "form-grid" }, staffFields),

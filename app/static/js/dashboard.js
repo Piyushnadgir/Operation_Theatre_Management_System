@@ -55,26 +55,27 @@ export async function renderDashboard(container) {
   function draw(data, equipment) {
     const inUse = equipment.filter((item) => item.status === "in_use").length;
     const topEquipment = [...data.equipment].sort((a, b) => b.bookedMinutes - a.bookedMinutes).slice(0, 5);
+    // Layout: key figures, then the two charts one under the other (same bar grid, so the
+    // same % gives the same bar length), then the top-equipment card in its own row.
     content.replaceChildren(
-      el("div", { class: "tiles" },
+      el("div", { class: "tiles figures" },
         figure("Theatre utilization", `${data.totals.theatres.usagePercent} %`),
         figure("Equipment in use now", `${inUse} of ${equipment.length}`),
         figure("Surgeries in range", String(data.keyFigures.surgeries)),
         figure("Emergency cases", String(data.keyFigures.emergencyCases))),
-      el("div", { class: "columns" },
-        el("section", { "aria-labelledby": "by-theatre" },
-          el("h2", { id: "by-theatre", text: "Utilization by theatre (booked hours / available hours)" }),
-          bars(data.theatres)),
-        el("section", { class: "card", "aria-labelledby": "top-eq" },
-          el("h2", { id: "top-eq", text: "Top equipment by usage" }),
-          topEquipment.length === 0 || topEquipment[0].bookedMinutes === 0
-            ? el("p", { class: "hint", text: "No equipment was used in this range." })
-            : el("table", {}, el("tbody", {}, topEquipment.map((row) => el("tr", {},
-              el("th", { scope: "row", text: row.name }),
-              el("td", { text: hours(row.bookedMinutes) }))))))),
+      el("section", { "aria-labelledby": "by-theatre" },
+        el("h2", { id: "by-theatre", text: "Utilization by theatre (booked hours / available hours)" }),
+        bars(data.theatres)),
       el("section", { "aria-labelledby": "by-equipment" },
         el("h2", { id: "by-equipment", text: "Utilization by equipment item" }),
         bars(data.equipment)),
+      el("section", { class: "card top-equipment", "aria-labelledby": "top-eq" },
+        el("h2", { id: "top-eq", text: "Top equipment by usage" }),
+        topEquipment.length === 0 || topEquipment[0].bookedMinutes === 0
+          ? el("p", { class: "hint", text: "No equipment was used in this range." })
+          : el("table", {}, el("tbody", {}, topEquipment.map((row) => el("tr", {},
+            el("th", { scope: "row", text: row.name }),
+            el("td", { class: "number", text: hours(row.bookedMinutes) })))))),
       el("p", { class: "hint", text: "Values are shown as text and bars; colour never carries meaning alone." }));
   }
 

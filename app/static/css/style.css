@@ -1,5 +1,6 @@
 /* OTMS Web UI styles.
-   Colours are named tokens, so the high-contrast theme only has to redefine them.
+   Colours, spacing and control sizes are named tokens, so the layout stays consistent
+   and the high-contrast theme only has to redefine colours.
    Default colours follow the SAD wireframes (Figures 4.3 and 4.4). */
 
 :root {
@@ -21,6 +22,17 @@
   --idle-bg: #e2e2e2;
   --bar-track: #dddddd;
   --bar-fill: #1f4e79;
+  --figure-border: #1f4e79;  /* key-figure tiles on the dashboard */
+  --check-on: #1f4e79;       /* the fill of a ticked checkbox */
+
+  /* One spacing scale and one control height for the whole UI */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --radius: 6px;
+  --control-height: 2.5rem;  /* inputs, selects and buttons line up */
   font-size: 18px;           /* readable base size (SAD 4.5) */
 }
 
@@ -44,6 +56,8 @@
   --idle-bg: #000000;
   --bar-track: #555555;
   --bar-fill: #ffff00;
+  --figure-border: #ffffff;  /* the brand colour is black here, so borders would vanish */
+  --check-on: #ffff00;
 }
 
 * { box-sizing: border-box; }
@@ -57,18 +71,28 @@ body {
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   line-height: 1.5;
+  overflow-wrap: break-word;  /* long names wrap instead of overflowing */
 }
 
-h1 { font-size: 1.6rem; margin: 0 0 1rem; }
-h2 { font-size: 1.2rem; margin: 1.5rem 0 0.5rem; }
+h1 { font-size: 1.6rem; margin: 0 0 var(--space-4); }
+h2 { font-size: 1.2rem; margin: var(--space-5) 0 var(--space-3); }
 a { color: var(--link); }
-p.hint { color: var(--muted); margin: 0.25rem 0; }
+p.hint { color: var(--muted); margin: var(--space-1) 0; }
 
-/* Visible keyboard focus everywhere (SAD 4.5: keyboard navigation). */
+/* Visible keyboard focus on everything the user can Tab to (SAD 4.5). */
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
+/* Date and date-time inputs: Tab also stops on their built-in calendar button, and while it
+   is focused the input itself is not ":focus". ":focus-within" covers every part of it. */
+input[type="date"]:focus-within, input[type="datetime-local"]:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+/* Headings and message boxes get focus from the script (tabindex="-1") so screen readers
+   announce them. They cannot be reached with Tab, so no ring is drawn on them. */
+[tabindex="-1"]:focus { outline: none; }
 
 .skip-link {
   position: absolute;
@@ -79,7 +103,7 @@ p.hint { color: var(--muted); margin: 0.25rem 0; }
   top: 1rem;
   z-index: 10;
   background: var(--bg);
-  padding: 0.5rem 1rem;
+  padding: var(--space-2) var(--space-4);
 }
 
 /* ---------- header and navigation ---------- */
@@ -88,19 +112,19 @@ p.hint { color: var(--muted); margin: 0.25rem 0; }
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1rem 2rem;
-  padding: 0.75rem 1.5rem;
+  gap: var(--space-3) var(--space-5);
+  padding: var(--space-3) var(--space-5);
   background: var(--brand);
   color: var(--brand-text);
   border-bottom: 2px solid var(--border);
 }
 .app-name { font-size: 1.3rem; font-weight: 700; }
 
-#main-nav { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
+#main-nav { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5); }
 #main-nav a {
   color: var(--brand-text);
   text-decoration: none;
-  padding: 0.25rem 0;
+  padding: var(--space-1) 0;
   border-bottom: 3px solid transparent;
 }
 /* The current screen is shown by colour AND an underline AND bold text. */
@@ -110,86 +134,180 @@ p.hint { color: var(--muted); margin: 0.25rem 0; }
   font-weight: 700;
 }
 
-.header-tools { display: flex; gap: 0.75rem; align-items: center; margin-left: auto; flex-wrap: wrap; }
-.user-info { font-size: 0.9rem; }
+.header-tools { display: flex; gap: var(--space-3); align-items: center; margin-left: auto; flex-wrap: wrap; }
+.user-info { display: flex; align-items: center; gap: var(--space-2); font-size: 0.9rem; }
+/* Role shown as a small outlined label next to the user name. */
+.role-badge {
+  border: 1px solid var(--brand-text);
+  border-radius: 999px;
+  padding: 0 var(--space-2);
+  font-size: 0.8rem;
+}
 
-/* ---------- emergency banner (SAD 4.5) ---------- */
+/* Narrow screens: name and tools on the first row, the menu on its own row below. */
+@media (max-width: 900px) {
+  .app-header { padding: var(--space-2) var(--space-4); gap: var(--space-2) var(--space-4); }
+  .app-name { font-size: 1.1rem; }
+  .header-tools { order: 2; gap: var(--space-2); }
+  /* The menu stays one row and scrolls sideways inside the header if it does not fit. */
+  #main-nav { order: 3; flex-basis: 100%; flex-wrap: nowrap; overflow-x: auto; gap: 0 var(--space-4); }
+  #main-nav a { white-space: nowrap; }
+  .header-tools .button-quiet { min-height: 2rem; padding: 0 var(--space-2); font-size: 0.85rem; }
+}
+
+/* ---------- emergency banner (SAD 4.5): one slim row ---------- */
 
 .emergency-banner {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.6rem 1.5rem;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-5);
   background: var(--danger-bg);
   border-bottom: 3px solid var(--danger);
 }
-.emergency-count { font-weight: 700; }
+.emergency-count { font-weight: 700; white-space: nowrap; }
 .emergency-count.active { color: var(--danger); }
+.emergency-banner .button { min-height: 2.1rem; padding: 0 var(--space-3); white-space: nowrap; }
+@media (max-width: 600px) {
+  .emergency-banner { padding: var(--space-1) var(--space-4); font-size: 0.9rem; }
+}
 
 /* ---------- layout ---------- */
 
-main { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+main { max-width: 1200px; margin: 0 auto; padding: var(--space-5); }
 main:focus { outline: none; }
+@media (max-width: 800px) {
+  main { padding: var(--space-4); }
+}
 
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 1.25rem;
-  margin-bottom: 1.25rem;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  margin-bottom: var(--space-5);
 }
+/* No extra gap above the first heading inside a card or dialog. */
+.card > :first-child, dialog form > :first-child { margin-top: 0; }
 .login-card { max-width: 26rem; margin: 2rem auto; }
+@media (max-width: 600px) {
+  .card { padding: var(--space-3) var(--space-4) var(--space-4); }
+}
 
+/* A row of labelled inputs and buttons. Items line up on their bottom edge, so a button
+   sits level with the inputs next to it, and the row wraps on narrow screens. */
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-3) var(--space-4);
   align-items: flex-end;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
+.toolbar .field { margin-bottom: 0; }
+
+/* Page title on the left, its toolbar on the right, both on the same bottom line. */
 .title-row {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
+  align-items: flex-end;
+  gap: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
 }
+.title-row h1, .title-row h2, .title-row .toolbar { margin: 0; }
 
 /* ---------- forms ---------- */
 
-.field { display: flex; flex-direction: column; margin-bottom: 0.9rem; }
-.field label, .field legend { font-weight: 600; margin-bottom: 0.25rem; }
+.field { display: flex; flex-direction: column; margin-bottom: var(--space-4); min-width: 0; }
+.field label, .field legend { font-weight: 600; margin-bottom: var(--space-1); }
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-  gap: 0 1.25rem;
+  gap: 0 var(--space-5);
 }
-fieldset.field { border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 0.75rem; }
-.check-list { max-height: 12rem; overflow-y: auto; }
-.check-list label { display: block; font-weight: 400; padding: 0.15rem 0; }
+/* A field that takes two columns, so a row of the grid is never left with a hole.
+   Only on wide screens: on a phone the grid has one column. */
+@media (min-width: 760px) {
+  .field-wide { grid-column: span 2; }
+}
+
+fieldset.field {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-1) var(--space-3) var(--space-2);
+  margin-inline: 0;
+}
+fieldset.field legend { padding: 0 var(--space-1); }
+.check-list { max-height: 14rem; overflow-y: auto; }
+
+/* One checkbox option per row: the box, then the text. The text wraps under itself
+   (a hanging indent), and an optional second line gives the status or the reason. */
+/* ".field .check-option" beats ".field label" (bold, with a bottom margin). */
+.check-option, .field .check-option {
+  display: grid;
+  grid-template-columns: 1.15rem 1fr;
+  column-gap: var(--space-2);
+  align-items: start;
+  padding: var(--space-1) 0;
+  margin: 0;
+  font-weight: 400;
+  cursor: pointer;
+}
+.check-option input { margin: 0.2rem 0 0; }  /* centres the box on the first line of text */
+.check-text { display: flex; flex-direction: column; min-width: 0; }
+.check-reason { font-size: 0.85rem; color: var(--muted); }
+.check-option.unavailable { cursor: not-allowed; }
+/* In a toolbar, a checkbox lines up with the inputs next to it (same height, bottom row). */
+.toolbar .check-option { align-self: flex-end; align-items: center; min-height: var(--control-height); }
+.toolbar .check-option input { margin: 0; }
+
+/* Checkboxes drawn by CSS so that a disabled one stays clearly visible:
+   a full-strength dashed border instead of the browser's faint grey box.
+   Ticked = the box is filled, with a ring of background colour inside the border. */
+input[type="checkbox"] {
+  appearance: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  min-height: 0;
+  padding: 0;
+  border: 2px solid var(--text);
+  border-radius: 3px;
+  background: var(--bg);
+}
+input[type="checkbox"]:checked {
+  background: var(--check-on);
+  box-shadow: inset 0 0 0 2px var(--bg);
+}
+input[type="checkbox"]:disabled { border-style: dashed; background: var(--surface); cursor: not-allowed; }
 
 input, select, textarea, button { font: inherit; }
 input, select, textarea {
-  padding: 0.45rem 0.6rem;
+  padding: var(--space-1) var(--space-2);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--bg);
   color: var(--text);
-  min-height: 2.4rem;
+  min-height: var(--control-height);
+  max-width: 100%;
 }
 
+/* ---------- buttons: one height and radius everywhere ---------- */
+
 .button, button {
-  display: inline-block;
-  padding: 0.5rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: var(--control-height);
+  padding: 0 var(--space-4);
   border: 2px solid var(--brand);
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--brand);
   color: var(--brand-text);
   cursor: pointer;
   text-decoration: none;
-  min-height: 2.4rem;
+  line-height: 1.2;
 }
 :root[data-theme="contrast"] .button,
 :root[data-theme="contrast"] button { border-color: #ffffff; }
@@ -198,7 +316,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   background: transparent;
   border-color: var(--brand-text);
   color: var(--brand-text);
-  padding: 0.25rem 0.75rem;
+  padding: 0 var(--space-3);
 }
 .button-secondary { background: var(--bg); color: var(--link); border-color: var(--link); }
 .button-danger { background: var(--danger); border-color: var(--danger); color: #ffffff; }
@@ -208,42 +326,61 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   color: #ffffff;
   font-weight: 700;
 }
-.link-button {
-  background: none;
-  border: none;
-  color: var(--link);
-  text-decoration: underline;
-  padding: 0.1rem 0.3rem;
-  min-height: auto;
-}
+:root[data-theme="contrast"] .button-emergency { color: #000000; }
 
-/* ---------- messages: icon-free text, colour plus a thick left border ---------- */
+/* Small outlined buttons for row and tile actions (Edit, Status, Allocate, ...). */
+.btn-small {
+  min-height: 2rem;
+  padding: 0 var(--space-2);
+  font-size: 0.9rem;
+  background: var(--bg);
+  color: var(--link);
+  border: 1.5px solid var(--link);
+}
+/* Destructive actions (Retire, Deactivate, Cancel): red AND a ⊘ icon AND a thicker border,
+   so they do not rely on colour alone. */
+.btn-danger { color: var(--danger); border-color: var(--danger); border-width: 2px; font-weight: 600; }
+:root[data-theme="contrast"] .btn-small { border-color: var(--link); }
+:root[data-theme="contrast"] .btn-danger { border-color: var(--danger); }
+
+/* A row of action buttons with even gaps; wraps cleanly in narrow table cells. */
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+
+/* ---------- messages: colour plus a thick left border ---------- */
 
 .message {
-  padding: 0.6rem 0.9rem;
+  padding: var(--space-2) var(--space-3);
   border-left: 6px solid var(--border);
   border-radius: 4px;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
   background: var(--info-bg);
   white-space: pre-line;
 }
 .message-error { border-left-color: var(--danger); background: var(--danger-bg); }
 .message-success { border-left-color: #2e7d32; background: var(--ok-bg); }
 .message-loading { font-style: italic; }
-.message ul { margin: 0.25rem 0 0; padding-left: 1.25rem; }
+.message ul { margin: var(--space-1) 0 0; padding-left: 1.25rem; }
 
 /* ---------- tables ---------- */
 
-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+table { width: 100%; border-collapse: collapse; margin-bottom: var(--space-4); }
+th, td { text-align: left; padding: var(--space-2) var(--space-2); border-bottom: 1px solid var(--border); vertical-align: middle; }
 th { background: var(--surface); }
+/* On a narrow screen a wide table scrolls inside its own box instead of squashing
+   its columns or making the whole page scroll sideways. */
 .table-wrap { overflow-x: auto; }
+.table-wrap table { min-width: 44rem; }
+@media (max-width: 800px) {
+  /* Cells stay on one line, so rows stay short and the table scrolls in its box. */
+  .table-wrap th, .table-wrap td { white-space: nowrap; }
+  .table-wrap .actions { flex-wrap: nowrap; }
+}
 
 /* ---------- badges: always icon + words, colour only adds to them ---------- */
 
 .badge {
   display: inline-block;
-  padding: 0.1rem 0.5rem;
+  padding: 0.1rem var(--space-2);
   border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 0.9rem;
@@ -262,67 +399,78 @@ th { background: var(--surface); }
 .tiles {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.25rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 .tile {
   border: 2px solid var(--border);
   border-radius: 8px;
-  padding: 0.75rem 1rem;
+  padding: var(--space-3) var(--space-4);
 }
-.tile h3 { margin: 0 0 0.3rem; font-size: 1.15rem; }
+.tile h3 { margin: 0 0 var(--space-1); font-size: 1.15rem; }
 .tile.status-available { background: var(--ok-bg); }
 .tile.status-occupied { background: var(--danger-bg); }
 .tile.status-cleaning { background: var(--warn-bg); }
 .tile.status-maintenance { background: var(--idle-bg); }
-.figure { background: var(--info-bg); border-color: var(--brand); }
+/* Tile actions: the status list and "Set status" together, Retire pushed to the right. */
+.tile-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-top: var(--space-3); }
+.tile-actions select { min-height: 2rem; padding: 0 var(--space-1); flex: 1 1 5rem; min-width: 0; }
+.tile-actions .btn-danger { margin-left: auto; }
+
+/* Key figures: two per row on a phone, four on a wide screen. */
+.figures { grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); }
+.figure { background: var(--info-bg); border-color: var(--figure-border); }
 .figure .label { display: block; color: var(--muted); }
 .figure .value { display: block; font-size: 1.7rem; font-weight: 700; }
+.top-equipment { max-width: 36rem; margin-top: var(--space-5); }
+td.number { text-align: right; font-variant-numeric: tabular-nums; }
 
-/* ---------- utilization bars (Figure 4.4): number always shown as text ---------- */
+/* ---------- utilization bars (Figure 4.4): number always shown as text ----------
+   Every chart uses the same three columns (name, bar, percentage), so the same
+   percentage gives the same bar length in every chart. */
 
 .bar-row {
   display: grid;
-  grid-template-columns: minmax(6rem, 10rem) 1fr 4.5rem;
-  gap: 0.75rem;
+  grid-template-columns: 12rem 1fr 5rem;
+  gap: var(--space-3);
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
 }
 .bar-track { background: var(--bar-track); height: 1.6rem; border-radius: 3px; overflow: hidden; }
 .bar-fill { background: var(--bar-fill); height: 100%; }
 .bar-value { text-align: right; font-variant-numeric: tabular-nums; }
-
-.columns { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
-@media (max-width: 800px) {
-  .columns { grid-template-columns: 1fr; }
-  main { padding: 1rem; }
+/* On a phone the name goes on its own line above the bar, so the bar keeps its width. */
+@media (max-width: 600px) {
+  .bar-row { grid-template-columns: 1fr 4.5rem; row-gap: 0; }
+  .bar-row > :first-child { grid-column: 1 / -1; }
 }
 
-.inline-status { font-size: 0.95rem; margin-left: 0.4rem; }
+.inline-status { font-size: 0.95rem; margin-left: var(--space-1); }
 
 /* ---------- surgeries day view: one column per theatre ---------- */
 
 .day-view {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
 }
-.day-column { border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; }
-.day-column h3 { margin: 0 0 0.5rem; }
+.day-column { border: 1px solid var(--border); border-radius: 8px; padding: var(--space-3); }
+.day-column h3 { margin: 0 0 var(--space-2); }
 .surgery-card {
   border: 1px solid var(--border);
   border-left-width: 6px;
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
-  margin-bottom: 0.6rem;
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
   background: var(--bg);
 }
 .surgery-card p { margin: 0.15rem 0; }
+.surgery-card .actions { margin-top: var(--space-2); }
 .surgery-time { font-weight: 700; }
 /* The coloured edge repeats the priority badge; the badge text carries the meaning. */
 .priority-border-critical { border-left-color: var(--danger); }
 .priority-border-urgent { border-left-color: #b8860b; }
-.priority-border-routine { border-left-color: var(--brand); }
+.priority-border-routine { border-left-color: var(--link); }
 
 dialog {
   border: 2px solid var(--border);
@@ -330,16 +478,23 @@ dialog {
   background: var(--bg);
   color: var(--text);
   width: min(32rem, 95vw);
+  padding: var(--space-5);
 }
 dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
 
 .notifications { list-style: none; padding: 0; margin: 0; }
-.notifications li { padding: 0.35rem 0; border-bottom: 1px solid var(--border); }
+.notifications li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+.notifications li:last-child { border-bottom: none; }
 .notifications li.unread { font-weight: 600; }
 .emergency-form { border: 3px solid var(--danger); }
 
-.tile-actions { display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; margin-top: 0.5rem; }
-.tile-actions select { min-height: 2rem; padding: 0.15rem 0.4rem; }
 .shift-row { align-items: flex-end; }
 .visually-hidden {
   position: absolute;
