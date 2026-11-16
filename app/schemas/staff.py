@@ -17,6 +17,8 @@ class StaffCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     staff_type: StaffTypeEnum
     specialization: Optional[str] = Field(default=None, max_length=100)
+    # Optional login of this doctor or nurse, so they can see their own surgeries (SAD 4.5)
+    user_id: Optional[int] = None
 
     @field_validator("name")
     @classmethod
@@ -66,6 +68,7 @@ class StaffResponse(BaseModel):
     staff_type: StaffTypeEnum
     specialization: Optional[str] = None
     is_active: bool
+    user_id: Optional[int] = None
 
 
 class AssignmentCheckRequest(BaseModel):

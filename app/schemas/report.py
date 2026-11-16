@@ -25,6 +25,11 @@ class ReportTotals(ResourceModel):
     equipment: UsageTotals
 
 
+class KeyFigures(ResourceModel):
+    surgeries: int
+    emergency_cases: int
+
+
 class UtilizationReport(ResourceModel):
     start: datetime
     end: datetime
@@ -32,3 +37,4 @@ class UtilizationReport(ResourceModel):
     theatres: List[TheatreUsage]
     equipment: List[EquipmentUsage]
     totals: ReportTotals
+    key_figures: KeyFigures

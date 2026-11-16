@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.v1.errors import ResourceRoute
@@ -25,6 +25,18 @@ def create_allocations(
         equipment_ids=sorted(allocation_data.equipment_ids),
         user_id=current_user.get("sub"),
     )
+
+
+@router.get("", response_model=List[AllocationResponse])
+def list_allocations(
+    surgery_id: Optional[int] = Query(None, alias="surgeryId"),
+    equipment_id: Optional[int] = Query(None, alias="equipmentId"),
+    include_released: bool = Query(False, alias="includeReleased"),
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles(RoleEnum.scheduler, RoleEnum.admin)),
+):
+    """The Web UI needs the allocation ids to release them and to keep equipment on reschedule."""
+    return EquipmentService(db).list_allocations(surgery_id, equipment_id, include_released)
 
 
 @router.post("/{allocation_id}/release")

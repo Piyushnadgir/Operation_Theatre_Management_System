@@ -240,3 +240,21 @@ def test_tc_rpt_02_replaced_allocations_are_excluded(db_session):
         ),
     )
     assert ReportService(db_session).utilization(FROM, TO)["equipment"][0]["booked_minutes"] == 120
+
+
+# ---------- key figures for the Utilization Dashboard (SAD Figure 4.4) ----------
+
+
+def test_tc_rpt_01_key_figures_count_surgeries_and_emergencies_in_range(db_session):
+    from app.models.models import EmergencyCase
+
+    ot1, ot2 = add(db_session, Theatre(name="OT-1"), Theatre(name="OT-2"))
+    surgery(db_session, ot1, at(9), at(10))  # inside: counts
+    crossing = surgery(db_session, ot2, at(6), at(9))  # overlaps the start: counts
+    surgery(db_session, ot1, at(11), at(12), SurgeryStatusEnum.cancelled)  # cancelled: not counted
+    outside = surgery(db_session, ot1, at(9, day=3), at(10, day=3))  # next day: not counted
+    add(db_session, EmergencyCase(surgery_id=crossing.surgery_id), EmergencyCase(surgery_id=outside.surgery_id))
+    service = ReportService(db_session)
+
+    assert service.utilization(FROM, TO)["key_figures"] == {"surgeries": 2, "emergency_cases": 1}
+    assert service.utilization(FROM, TO, theatre_id=ot1.theatre_id)["key_figures"] == {"surgeries": 1, "emergency_cases": 0}
