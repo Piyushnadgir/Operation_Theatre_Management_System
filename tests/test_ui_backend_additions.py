@@ -159,3 +159,12 @@ def test_scheduler_can_list_allocations(client, db_session, allocations):
 def test_doctors_and_nurses_cannot_list_allocations(client, db_session, role):
     headers = headers_for(client, db_session, f"user_{role.value}", role)
     assert client.get("/api/v1/allocations", headers=headers).status_code == 403
+
+
+def test_my_surgeries_with_a_non_numeric_user_id_is_empty(client):
+    from app.core.security import create_access_token
+
+    token = create_access_token({"sub": "not-a-number", "role": "doctor"})
+    response = client.get("/api/v1/me/surgeries", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.json() == []
